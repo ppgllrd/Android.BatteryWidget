@@ -19,7 +19,6 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-
 /**
  * Created by pepeg on 18/06/13.
  */
@@ -135,7 +134,7 @@ public class BatteryWidget extends AppWidgetProvider {
 
         public RemoteViews buildUpdate(Context context) {
             // Build an update that holds the updated widget contents
-            RemoteViews updateViews = new RemoteViews(context.getPackageName(), R.layout.widget);
+            RemoteViews updatedViews = new RemoteViews(context.getPackageName(), R.layout.widget);
             try {
                 //Log.d(LogTag,"Updating Views");
                 int level = 0;
@@ -159,7 +158,7 @@ public class BatteryWidget extends AppWidgetProvider {
 
                 Bitmap bitmap = Bitmap.createBitmap(bitmapSz, bitmapSz, Bitmap.Config.ARGB_4444);
 
-                //create a canvas from existant bitmap that will be used for drawing
+                //create a canvas from existing bitmap that will be used for drawing
                 Canvas canvas = new Canvas(bitmap);
 
                 //create new paint
@@ -169,14 +168,12 @@ public class BatteryWidget extends AppWidgetProvider {
                 paint.setStrokeJoin(Paint.Join.ROUND);
                 paint.setStrokeCap(Paint.Cap.ROUND);
 
-
                 paint.setStyle(Paint.Style.FILL);
                 paint.setColor(Color.argb(28,0,0,0));
                 canvas.drawArc(rectF1,0,360,false,paint);
 
-
                 paint.setStyle(Paint.Style.STROKE);
-                paint.setColor(charging ? Color.YELLOW : Color.GRAY);
+                paint.setColor(charging ? Color.GREEN : Color.GRAY);
                 paint.setStrokeWidth(charging ? 6 : 3);
 
                 canvas.drawArc(charging ? rectF1 : rectF2,0,360,false,paint);
@@ -184,31 +181,25 @@ public class BatteryWidget extends AppWidgetProvider {
 
                 int color;
                 if(level < 15)
-                    color = Color.RED;
+                    color = Color.argb(255, 255, 10, 10);
                 else if(level < 30)
                     color = Color.argb(255,255,128,0);
                 else
-                    color = Color.argb(217,0,189,255);
+                    color = Color.argb(255,0,128,255);
                 paint.setColor(color);
                 paint.setStrokeWidth(10);
                 //canvas.drawArc(new RectF(25,25,125,125),-90+(100-level)*360/100,level*360/100,false,paint);
                 canvas.drawArc(rectF1,-90,-level*360/100,false,paint);
 
+                updatedViews.setImageViewBitmap(R.id.circleImageView, bitmap);
 
-
-
-
-                updateViews.setImageViewBitmap(R.id.circleImageView, bitmap);
-
-
-                String levelText = Integer.toString(level); 
-                updateViews.setTextViewText(R.id.batteryLevel, levelText);
+                updatedViews.setTextViewText(R.id.batteryLevel, Integer.toString(level));
 
             } catch (Exception e) {
                 Log.e(LogTag, "Error Updating Views", e);
             }
 
-            return updateViews;
+            return updatedViews;
         }
 
         @Override
