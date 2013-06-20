@@ -39,7 +39,7 @@ public class BatteryInfo extends BroadcastReceiver {
                 }
             }
         } catch (Exception e) {
-            Log.e(BatteryWidget.LogTag, "", e);
+            Log.e(BatteryWidget.LogTag, "onReceive", e);
         }
     }
 }
