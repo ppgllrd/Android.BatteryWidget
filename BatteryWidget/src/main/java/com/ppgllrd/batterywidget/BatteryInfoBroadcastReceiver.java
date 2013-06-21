@@ -10,7 +10,13 @@ import android.util.Log;
 /**
  * Created by pepeg on 18/06/13.
  */
-public class BatteryInfo extends BroadcastReceiver {
+public class BatteryInfoBroadcastReceiver extends BroadcastReceiver {
+
+    private ScreenUpdateService screenUpdateService = null;
+
+    public BatteryInfoBroadcastReceiver(ScreenUpdateService screenUpdateService) {
+        this.screenUpdateService = screenUpdateService;
+    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -33,8 +39,9 @@ public class BatteryInfo extends BroadcastReceiver {
                         int scale = intent.getIntExtra("scale", 100); 
                         editor.putInt(BatteryWidget.KEY_SCALE, scale);
                         editor.commit();
-                        Intent forceUpIntent = new Intent(context, BatteryWidget.ScreenUpdateService.class);
-                        context.startService(forceUpIntent);
+                        screenUpdateService.updateWidget();
+                        //Intent forceUpIntent = new Intent(context, ScreenUpdateService.class);
+                        //context.startService(forceUpIntent);
                     }
                 }
             }

@@ -18,9 +18,9 @@
         </receiver>
 
         <!-- Service to perform widget screen updates -->
-        <service android:name=".BatteryWidget$ScreenUpdateService" />
+        <service android:name=".ScreenUpdateService" />
 
-        <receiver android:name=".BatteryInfo" android:label="BatteryInfo">
+        <receiver android:name=".BatteryInfoBroadcastReceiver" android:label="BatteryInfo">
             <intent-filter>
                 <action android:name="android.intent.action.BATTERY_CHANGED" />
             </intent-filter>
