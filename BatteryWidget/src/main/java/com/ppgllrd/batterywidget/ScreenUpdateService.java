@@ -2,11 +2,11 @@ package com.ppgllrd.batterywidget;
 
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -21,34 +21,34 @@ import android.widget.RemoteViews;
  * Created by pepeg on 21/06/13.
  */
 public class ScreenUpdateService extends Service {
-
-    public static final String LogTag = ScreenUpdateService.class.getName();
-
+    private static final String LogTag = ScreenUpdateService.class.getName();
     private static final int bitmapSz = 150;
+    private static int radius = 100;
+    private final RectF rectF1 = mkRectF(radius);
+    private final RectF rectF2 = mkRectF(radius + 3);
+
+    private BatteryInfoBroadcastReceiver biBR = null;
+
+    // Currently shown battery status
+    private int level = -1;
+    private int status = -1;
+    private int scale = 100;
 
     private static RectF mkRectF(int radius) {
         int margin = (bitmapSz - radius) / 2;
         return new RectF(margin, margin, bitmapSz - margin, bitmapSz - margin);
     }
 
-    private static int radius = 100;
-
-    private final RectF rectF1 = mkRectF(radius);
-    private final RectF rectF2 = mkRectF(radius + 4);
-
-
-    private BatteryInfoBroadcastReceiver biBR = null;
-
     @Override
-    public void onStart(Intent intent, int startId) {
-
+    public int onStartCommand(Intent intent, int flags, int startId) {
         if (biBR == null) {
-            biBR = new BatteryInfoBroadcastReceiver(this);
+            biBR = new BatteryInfoBroadcastReceiver();
             IntentFilter mIntentFilter = new IntentFilter();
             mIntentFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
             registerReceiver(biBR, mIntentFilter);
         }
         updateWidget();
+        return START_STICKY;
         //stopSelf();
     }
 
@@ -81,30 +81,21 @@ public class ScreenUpdateService extends Service {
         }
     }
 
-    public RemoteViews buildUpdate(Context context) {
+    private RemoteViews buildUpdate(Context context) {
         // Build an update that holds the updated widget contents
         RemoteViews updatedViews = new RemoteViews(context.getPackageName(), R.layout.widget);
         try {
-            //Log.d(LogTag,"Updating Views");
-            int level = 0;
-            boolean charging = false;
-            SharedPreferences settings = getSharedPreferences(BatteryWidget.SHARED_PREFS_NAME, Context.MODE_PRIVATE);
-            if (settings != null) {
-                level = settings.getInt(BatteryWidget.KEY_LEVEL, 0);
 
-                //update level based on scale
-                int scale = settings.getInt(BatteryWidget.KEY_SCALE, 100);
-                if (scale != 100) {
-                    if (scale <= 0) scale = 100;
-                    level = (100 * level) / scale;
-                }
-                charging = (settings.getInt(BatteryWidget.KEY_CHARGING, BatteryManager.BATTERY_STATUS_UNKNOWN) == BatteryManager.BATTERY_STATUS_CHARGING);
+            if (scale != 100) {
+                if (scale <= 0) scale = 100;
+                level = (100 * level) / scale;
             }
+            boolean charging = (status == BatteryManager.BATTERY_STATUS_CHARGING);
 
-            //create a bitmap
+            // Create a bitmap
             Bitmap bitmap = Bitmap.createBitmap(bitmapSz, bitmapSz, Bitmap.Config.ARGB_4444);
 
-            //create a canvas from existing bitmap that will be used for drawing
+            // Create a canvas from existing bitmap that will be used for drawing
             Canvas canvas = new Canvas(bitmap);
 
             //create new paint
@@ -133,7 +124,6 @@ public class ScreenUpdateService extends Service {
                 color = Color.argb(255, 0, 128, 255);
             paint.setColor(color);
             paint.setStrokeWidth(10);
-            //canvas.drawArc(new RectF(25,25,125,125),-90+(100-level)*360/100,level*360/100,false,paint);
             canvas.drawArc(rectF1, -90, -level * 360 / 100, false, paint);
 
             updatedViews.setImageViewBitmap(R.id.circleImageView, bitmap);
@@ -149,5 +139,29 @@ public class ScreenUpdateService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    public class BatteryInfoBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try {
+                String action = intent.getAction();
+                if (action != null && action.equals(Intent.ACTION_BATTERY_CHANGED)) {
+
+                    int currentLevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+                    int currentStatus = intent.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN);
+
+                    // Update display if something changed
+                    if (level != currentLevel || status != currentStatus) {
+                        scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
+                        level = currentLevel;
+                        status = currentStatus;
+                        updateWidget();
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(BatteryWidget.LogTag, "onReceive", e);
+            }
+        }
     }
 }
