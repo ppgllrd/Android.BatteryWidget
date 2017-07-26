@@ -23,7 +23,7 @@ import android.widget.RemoteViews;
 public class ScreenUpdateService extends Service {
     private static final String LogTag = ScreenUpdateService.class.getName();
     private static final int bitmapSz = 150;
-    private static int radius = 100;
+    private static int radius = 140;
     private final RectF rectF1 = mkRectF(radius);
     private final RectF rectF2 = mkRectF(radius + 3);
 
@@ -123,7 +123,7 @@ public class ScreenUpdateService extends Service {
             else
                 color = Color.argb(255, 0, 128, 255);
             paint.setColor(color);
-            paint.setStrokeWidth(10);
+            paint.setStrokeWidth(12);
             canvas.drawArc(rectF1, -90, -level * 360 / 100, false, paint);
 
             updatedViews.setImageViewBitmap(R.id.circleImageView, bitmap);
