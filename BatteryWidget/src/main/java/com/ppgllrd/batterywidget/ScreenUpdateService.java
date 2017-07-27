@@ -43,6 +43,7 @@ public class ScreenUpdateService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (biBR == null) {
             biBR = new BatteryInfoBroadcastReceiver();
+            biBR.setScreenUpdateService(this);
             IntentFilter mIntentFilter = new IntentFilter();
             mIntentFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
             registerReceiver(biBR, mIntentFilter);
@@ -141,7 +142,13 @@ public class ScreenUpdateService extends Service {
         return null;
     }
 
-    public class BatteryInfoBroadcastReceiver extends BroadcastReceiver {
+    public static class BatteryInfoBroadcastReceiver extends BroadcastReceiver {
+        private ScreenUpdateService screenUpdateService;
+
+        void setScreenUpdateService(ScreenUpdateService screenUpdateService) {
+            this.screenUpdateService = screenUpdateService;
+        }
+
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
@@ -152,11 +159,11 @@ public class ScreenUpdateService extends Service {
                     int currentStatus = intent.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN);
 
                     // Update display if something changed
-                    if (level != currentLevel || status != currentStatus) {
-                        scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
-                        level = currentLevel;
-                        status = currentStatus;
-                        updateWidget();
+                    if (screenUpdateService.level != currentLevel || screenUpdateService.status != currentStatus) {
+                        screenUpdateService.scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
+                        screenUpdateService.level = currentLevel;
+                        screenUpdateService.status = currentStatus;
+                        screenUpdateService.updateWidget();
                     }
                 }
             } catch (Exception e) {
